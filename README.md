@@ -118,7 +118,7 @@ The provided ARM or Bicep Template will provision the following resources:
 
 All connection information for Azure Cosmos DB and Azure OpenAI Service is zero-touch and injected as environment variables into Azure App Service and Azure Functions at deployment time. 
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzureCosmosDB%2FVectorSearchAiAssistant%2Fmongovcorev2%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FPowerPlatformCave%2FVectorSearchAiAssistant%2Fmongovcorev2%2Fazuredeploy.json)
 
 ### Initial data load
 
