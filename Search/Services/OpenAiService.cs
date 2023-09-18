@@ -15,7 +15,7 @@ public class OpenAiService
     private readonly int _maxConversationTokens = default;
     private readonly int _maxCompletionTokens = default;
     private readonly ILogger _logger;
-    private readonly OpenAIClient _client;    
+    private readonly OpenAIClient _client;
 
 
 
@@ -53,7 +53,7 @@ public class OpenAiService
     /// </summary>
     public int MaxCompletionTokens
     {
-        get => _maxCompletionTokens; 
+        get => _maxCompletionTokens;
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ public class OpenAiService
             _client = new OpenAIClient(key, options);
         else
             _client = new(new Uri(endpoint), new AzureKeyCredential(key), options);
-        
+
 
     }
 
@@ -142,7 +142,7 @@ public class OpenAiService
             string message = $"OpenAiService.GetEmbeddingsAsync(): {ex.Message}";
             _logger.LogError(message);
             throw;
-            
+
         }
     }
 
@@ -157,7 +157,7 @@ public class OpenAiService
 
         try
         {
-        
+
             ChatMessage systemMessage = new ChatMessage(ChatRole.System, _systemPromptRetailAssistant + documents);
             ChatMessage userMessage = new ChatMessage(ChatRole.User, userPrompt);
 
@@ -179,7 +179,7 @@ public class OpenAiService
             };
 
             Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_completionsModelOrDeployment, options);
-        
+
 
             ChatCompletions completions = completionsResponse.Value;
 
@@ -190,7 +190,7 @@ public class OpenAiService
             );
 
         }
-        catch ( Exception ex ) 
+        catch (Exception ex)
         {
 
             string message = $"OpenAiService.GetChatCompletionAsync(): {ex.Message}";

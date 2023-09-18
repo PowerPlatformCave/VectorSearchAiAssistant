@@ -1,5 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Search.Models
 {
@@ -21,8 +21,8 @@ namespace Search.Models
         public int salesOrderCount { get; set; }
         public float[]? vector { get; set; }
 
-        public Customer(string id, string type, string customerId, string title, 
-            string firstName, string lastName, string emailAddress, string phoneNumber, 
+        public Customer(string id, string type, string customerId, string title,
+            string firstName, string lastName, string emailAddress, string phoneNumber,
             string creationDate, List<CustomerAddress> addresses, Password password,
             int salesOrderCount, float[]? vector = null)
         {
@@ -81,7 +81,7 @@ namespace Search.Models
         public string type { get; set; }
         public List<float> coordinates { get; set; }
 
-       public Location(string type, List<float> coordinates)
+        public Location(string type, List<float> coordinates)
         {
             this.type = type;
             this.coordinates = coordinates;

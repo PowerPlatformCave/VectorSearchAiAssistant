@@ -1,5 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Search.Models
 {
@@ -15,7 +15,7 @@ namespace Search.Models
         public List<SalesOrderDetails> details { get; set; }
         public float[]? vector { get; set; }
 
-        public SalesOrder(string id, string type, string customerId,  string orderDate, string shipDate, List<SalesOrderDetails> details, float[]? vector = null)
+        public SalesOrder(string id, string type, string customerId, string orderDate, string shipDate, List<SalesOrderDetails> details, float[]? vector = null)
         {
             this.id = id;
             this.type = type;

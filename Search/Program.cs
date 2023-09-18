@@ -1,7 +1,6 @@
+using Microsoft.Extensions.Options;
 using Search.Options;
 using Search.Services;
-using Microsoft.Extensions.Options;
-using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +43,7 @@ static class ProgramExtensions
 
     public static void RegisterServices(this IServiceCollection services)
     {
-        
+
         services.AddSingleton<OpenAiService, OpenAiService>((provider) =>
         {
             var openAiOptions = provider.GetRequiredService<IOptions<OpenAi>>();

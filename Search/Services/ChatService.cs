@@ -32,7 +32,7 @@ public class ChatService
     /// Returns list of chat session ids and names for left-hand nav to bind to (display Name and ChatSessionId as hidden)
     /// </summary>
     public async Task<List<Session>> GetAllChatSessionsAsync()
-    {  
+    {
         return _sessions = await _mongoDbService.GetSessionsAsync();
     }
 
@@ -117,13 +117,13 @@ public class ChatService
     {
 
         try
-        { 
+        {
             ArgumentNullException.ThrowIfNull(sessionId);
 
             //Retrieve conversation, including latest prompt.
             //If you put this after the vector search it doesn't take advantage of previous information given so harder to chain prompts together.
             //However if you put this before the vector search it can get stuck on previous answers and not pull additional information. Worth experimenting
-            
+
             (string conversationAndUserPrompt, int conversationTokens) = GetChatSessionConversation(sessionId, userPrompt);
 
 
@@ -145,14 +145,14 @@ public class ChatService
 
             //Add to prompt and completion to cache, then persist in Cosmos as transaction
             Message promptMessage = new Message(sessionId, nameof(Participants.User), newUserPromptTokens, default, userPrompt);
-            Message completionMessage = new Message(sessionId, nameof(Participants.Assistant), completionTokens, promptTokens, completion);        
+            Message completionMessage = new Message(sessionId, nameof(Participants.Assistant), completionTokens, promptTokens, completion);
             await AddPromptCompletionMessagesAsync(sessionId, promptMessage, completionMessage);
 
 
             return completion;
 
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             string message = $"ChatService.GetChatCompletionAsync(): {ex.Message}";
             _logger.LogError(message);
@@ -168,7 +168,7 @@ public class ChatService
     /// </summary>
     private (string augmentedContent, int newUserPromptTokens) BuildPromptAndData(string sessionId, string userPrompt, int conversationTokens, string augmentedContent)
     {
-        
+
         string updatedAugmentedContent = "";
 
         //SharpToken only estimates token usage and often undercounts. Add a buffer of 300 tokens.
@@ -185,7 +185,7 @@ public class ChatService
         int promptTokens = encoding.Encode(userPrompt).Count;
 
         //Get count of vectors on conversation. This only counts the prompt and completion tokens. Does not include the tokens used to process the rag data.
-        
+
 
         //If RAG data plus user prompt, plus conversation, plus tokens for completion is greater than max tokens, reduce by the size of data sent.
         if (ragTokens + promptTokens + conversationTokens + _maxCompletionTokens > maxGPTTokens)
@@ -221,7 +221,7 @@ public class ChatService
     private (string conversation, int tokens) GetChatSessionConversation(string sessionId, string userPrompt)
     {
 
-        
+
         int? tokensUsed = 0;
 
         List<string> conversationBuilder = new List<string>();

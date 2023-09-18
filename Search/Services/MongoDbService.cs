@@ -3,7 +3,6 @@
     using MongoDB.Bson;
     using MongoDB.Driver;
     using Search.Models;
-    using ZstdSharp.Unsafe;
 
     /// <summary>
     /// Service to access Azure Cosmos DB for Mongo vCore.
@@ -12,7 +11,7 @@
     {
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
-        
+
         private readonly IMongoCollection<Product> _products;
         private readonly IMongoCollection<Customer> _customers;
         private readonly IMongoCollection<BsonDocument> _vectors;
@@ -27,7 +26,8 @@
         /// <summary>
         /// Creates a new instance of the service.
         /// </summary>
-        /// <param name="endpoint">Endpoint URI.</param>
+        /// <param name="
+        /// ">Endpoint URI.</param>
         /// <param name="key">Account key.</param>
         /// <param name="databaseName">Name of the database to access.</param>
         /// <param name="collectionNames">Names of the collections for this retail sample.</param>
@@ -41,7 +41,7 @@
             ArgumentException.ThrowIfNullOrEmpty(databaseName);
             ArgumentException.ThrowIfNullOrEmpty(collectionNames);
             ArgumentException.ThrowIfNullOrEmpty(maxVectorSearchResults);
-            
+
 
             _openAiService = openAiService;
             _logger = logger;
@@ -168,12 +168,12 @@
 
             try
             {
-                
+
                 messages = await _messages.Find(
                     filter: Builders<Message>.Filter.Eq("Type", nameof(Message))
                     & Builders<Message>.Filter.Eq("SessionId", sessionId))
                     .ToListAsync();
-                
+
             }
             catch (MongoException ex)
             {
@@ -194,7 +194,7 @@
         {
             try
             {
-                
+
                 await _sessions.InsertOneAsync(session);
 
             }
@@ -214,7 +214,7 @@
         {
             try
             {
-                
+
                 await _messages.InsertOneAsync(message);
 
             }
@@ -262,7 +262,7 @@
 
                 try
                 {
-                    
+
                     await _sessions.ReplaceOneAsync(
                         filter: Builders<Session>.Filter.Eq("Type", nameof(Session))
                             & Builders<Session>.Filter.Eq("SessionId", session.SessionId)
