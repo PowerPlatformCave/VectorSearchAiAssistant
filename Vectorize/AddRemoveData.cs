@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Vectorize.Models;
 using Vectorize.Services;
 
+
 namespace Vectorize
 {
     public class AddRemoveData
@@ -29,15 +30,15 @@ namespace Vectorize
             string? action = req.Query["action"];
 
             try
-            { 
+            {
 
                 if (action == "add")
                 {
-                    await AddProduct();
+                    await AddMovie();
                 }
                 else if (action == "remove")
                 {
-                    await RemoveProduct();
+                    await RemoveMovie();
 
                 }
                 else
@@ -51,7 +52,7 @@ namespace Vectorize
 
                 return response;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
 
                 var response = req.CreateResponse(HttpStatusCode.BadRequest);
@@ -61,38 +62,38 @@ namespace Vectorize
             }
         }
 
-        public async Task AddProduct() 
+        public async Task AddMovie()
         {
 
             try
             {
 
-                Product product = GetCosmicSock;
+                Movie movie = GetMovieTest;
 
-                await _mongo.UpsertProductAsync(product);
+                await _mongo.UpsertProductAsync(movie);
 
-                _logger.LogInformation("Vector generated for Cosmic Sock and saved in product catalog");
+                _logger.LogInformation("Vector generado para Movie Recomendation Engine y guardado en el catálogo de películas");
 
             }
             catch (Exception ex)
             {
-                
+
                 _logger.LogError(ex.Message);
                 throw;
 
             }
         }
 
-        public async Task RemoveProduct()
+        public async Task RemoveMovie()
         {
 
             try
             {
-                Product product = GetCosmicSock;
+                Movie movie = GetMovieTest;
 
-                await _mongo.DeleteProductAsync(product);
+                await _mongo.DeleteMovieAsync(movie);
 
-                _logger.LogInformation("Cosmic Sock Vector deleted and removed from product catalog");
+                _logger.LogInformation("Vector borrado de Movie Recomendation Engine y eliminado del catálogo de películas");
 
             }
             catch (Exception ex)
@@ -104,22 +105,34 @@ namespace Vectorize
 
         }
 
-        public Product GetCosmicSock
+        public Movie GetMovieTest
         {
-            get => new Product(
-                id: "00001",
-                categoryId: "C48B4EF4-D352-4CD2-BCB8-CE89B7DFA642",
-                categoryName: "Clothing, Socks",
-                sku: "SO-R999-M",
-                name: "Cosmic Racing Socks, M",
-                description: "The product called Cosmic Racing Socks, M",
-                price: 6.00,
-                tags: new List<Tag>
+            get => new Movie(
+                Id: "00001",
+                Title: "The Grudge",
+                Year: 2020,
+                Cast: new List<string>
                 {
-                    new Tag(id: "51CD93BF-098C-4C25-9829-4AD42046D038", name: "Tag-25"),
-                    new Tag(id: "5D24B427-1402-49DE-B79B-5A7013579FBC", name: "Tag-76"),
-                    new Tag(id: "D4EC9C09-75F3-4ADD-A6EB-ACDD12C648FA", name: "Tag-153")
-                });
+                    "Andrea Riseborough",
+                    "Demián Bichir",
+                    "John Cho",
+                    "Betty Gilpin",
+                    "Lin Shaye",
+                    "Jacki Weaver"
+                },
+                Genres: new List<string>
+                {
+                    "Horror",
+                    "Supernatural"
+                },
+                Href: "The_Grudge_(2020_film)",
+                Extract: "The Grudge is a 2020 American psychological supernatural horror film written and directed by Nicolas Pesce. Originally announced as a reboot of the 2004 American remake and the original 2002 Japanese horror film Ju-On: The Grudge, the film ended up taking place before and during the events of the 2004 film and its two direct sequels, and is the fourth installment in the American The Grudge film series. The film stars Andrea Riseborough, Demián Bichir, John Cho, Betty Gilpin, Lin Shaye, and Jacki Weaver, and follows a police officer who investigates several murders that are seemingly connected to a single house.",
+                Thumbnail: "https://upload.wikimedia.org/wikipedia/en/3/34/The_Grudge_2020_Poster.jpeg",
+                ThumbnailWidth: 220,
+                ThumbnailHeight: 326
+                );
         }
+
+
     }
 }

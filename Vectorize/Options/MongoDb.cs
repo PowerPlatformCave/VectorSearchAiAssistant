@@ -6,7 +6,7 @@ namespace Vectorize.Options
     public record MongoDb
     {
         public string? Connection { get; set; }
-        public string? DatabaseName { get; set; } 
+        public string? DatabaseName { get; set; }
 
         public string? CollectionNames { get; set; }
 

@@ -3,6 +3,7 @@ using Azure.AI.OpenAI;
 using Azure.Core;
 using Microsoft.Extensions.Logging;
 
+
 namespace Vectorize.Services;
 
 public class OpenAiService
@@ -19,12 +20,12 @@ public class OpenAiService
     public OpenAiService(string endpoint, string key, string embeddingsDeployment, string maxTokens, ILogger logger)
     {
 
-        
+
         _openAIEndpoint = endpoint;
         _openAIKey = key;
         _openAIEmbeddings = embeddingsDeployment;
         _openAIMaxTokens = int.TryParse(maxTokens, out _openAIMaxTokens) ? _openAIMaxTokens : 8191;
-        
+
         _logger = logger;
 
 
@@ -41,7 +42,7 @@ public class OpenAiService
         try
         {
 
-            //Use this as endpoint in configuration to use non-Azure Open AI endpoint and OpenAI model names
+            //Alternativa como endpoint en la configuración para utilizar nombres de endpoints y modelos de OpenAI que no sean de Azure Open AI.
             if (_openAIEndpoint.Contains("api.openai.com"))
                 _client = new OpenAIClient(_openAIKey, clientOptions);
             else
@@ -61,6 +62,7 @@ public class OpenAiService
             {
                 Input = data
             };
+
 
             var response = await _client.GetEmbeddingsAsync(_openAIEmbeddings, options);
 
