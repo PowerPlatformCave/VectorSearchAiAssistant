@@ -12,8 +12,7 @@
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
 
-        private readonly IMongoCollection<Product> _products;
-        private readonly IMongoCollection<Customer> _customers;
+        private readonly IMongoCollection<Movie> _movie;        
         private readonly IMongoCollection<BsonDocument> _vectors;
         private readonly IMongoCollection<Session> _sessions;
         private readonly IMongoCollection<Message> _messages;
@@ -50,11 +49,10 @@
             _database = _client.GetDatabase(databaseName);
             _maxVectorSearchResults = int.TryParse(maxVectorSearchResults, out _maxVectorSearchResults) ? _maxVectorSearchResults : 10;
 
-            //product, customer, vectors, completions  //Not used
+            //movie, vectors, completions  //Not used
             List<string> collections = collectionNames.Split(',').ToList();
 
-            _products = _database.GetCollection<Product>("product");
-            _customers = _database.GetCollection<Customer>("customer");
+            _movie = _database.GetCollection<Movie>("movie");            
             _vectors = _database.GetCollection<BsonDocument>("vectors");
             _sessions = _database.GetCollection<Session>("completions");
             _messages = _database.GetCollection<Message>("completions");
@@ -101,7 +99,12 @@
             }
 
         }
-
+  
+        /// <summary>
+        /// Gets a list of all current movies.
+        /// </summary>
+        /// <param name="embeddings"></param>
+        /// <returns></returns>
         public async Task<string> VectorSearchAsync(float[] embeddings)
         {
             List<string> retDocs = new List<string>();
@@ -112,11 +115,42 @@
             {
                 //Search Mongo vCore collection for similar embeddings
                 //Project the fields that are needed
-                BsonDocument[] pipeline = new BsonDocument[]
+                //BsonDocument[] pipeline = new BsonDocument[]
+                //{
+                //    BsonDocument.Parse($"{{$search: {{cosmosSearch: {{ vector: [{string.Join(',', embeddings)}], path: 'vector', k: {_maxVectorSearchResults}}}, returnStoredSource:true}}}}"),
+                //    BsonDocument.Parse($"{{$project: {{_id: 0, vector: 0}}}}"),
+                //};
+
+                var searchStage = new BsonDocument
                 {
-                    BsonDocument.Parse($"{{$search: {{cosmosSearch: {{ vector: [{string.Join(',', embeddings)}], path: 'vector', k: {_maxVectorSearchResults}}}, returnStoredSource:true}}}}"),
-                    BsonDocument.Parse($"{{$project: {{_id: 0, vector: 0}}}}"),
+                    {
+                        "$search", new BsonDocument
+                        {
+                            { "cosmosSearch", new BsonDocument
+                                {
+                                    { "vector", new BsonArray(embeddings) }, // Utiliza BsonArray para el arreglo
+                                    { "path", "vector" },
+                                    { "k", _maxVectorSearchResults }
+                                }
+                            },
+                            { "returnStoredSource", true }
+                        }
+                    }
                 };
+
+
+                var projectStage = new BsonDocument
+                {
+                    { "$project", new BsonDocument
+                        {
+                            { "_id", 0 },
+                            { "vector", 0 }
+                        }
+                    }
+};
+
+                var pipeline = new BsonDocument[] { searchStage, projectStage };
+
 
                 // Return results, combine into a single string
                 List<BsonDocument> bsonDocuments = await _vectors.Aggregate<BsonDocument>(pipeline).ToListAsync();

@@ -59,14 +59,14 @@ namespace Vectorize
 
             try
             {
-                BlobContainerClient blobContainerClient = new BlobContainerClient(new Uri("https://cosmosdbcosmicworks.blob.core.windows.net/cosmic-works-mongo/"));
+                //BlobContainerClient blobContainerClient = new BlobContainerClient(new Uri("https://6ra5ehlohm6skfnstorage.blob.core.windows.net/movies"));
 
-
+                BlobContainerClient blobContainerClient = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=6ra5ehlohm6skfnstorage;AccountKey=spofxiExkV8EaGF6ExKUa6Nr06jgOVuS0FrI5Fw+W96WSukJ1IRCS7EwfAvZFnLckKLsBXzy3Rp++AStbKevXg==", "movies");
                 //Download and ingest movies.json
                 _logger.LogInformation("Ingesta de películas desde blob storage");
 
 
-                BlobClient movieBlob = blobContainerClient.GetBlobClient("movie.json");
+                BlobClient movieBlob = blobContainerClient.GetBlobClient("movies-2020s.json");
                 BlobDownloadStreamingResult pResult = await movieBlob.DownloadStreamingAsync();
 
                 using (StreamReader pReader = new StreamReader(pResult.Content))
@@ -94,7 +94,7 @@ namespace Vectorize
                 int moviesVectors = await _mongo.InitialMoviesVectorsAsync();
 
                 _logger.LogInformation("Generación y almacenamiento de vectores completado");
-                _logger.LogInformation($"{moviesVectors} pleiculas completadas.");
+                _logger.LogInformation($"{moviesVectors} peliculas completadas.");
 
             }
             catch (Exception ex)

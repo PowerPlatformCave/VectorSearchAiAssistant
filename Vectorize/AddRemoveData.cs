@@ -4,7 +4,7 @@ using System.Net;
 using Microsoft.Azure.Functions.Worker.Http;
 using Vectorize.Models;
 using Vectorize.Services;
-
+using MongoDB.Bson;
 
 namespace Vectorize
 {
@@ -108,7 +108,7 @@ namespace Vectorize
         public Movie GetMovieTest
         {
             get => new Movie(
-                Id: "00001",
+                Id: null,
                 Title: "The Grudge",
                 Year: 2020,
                 Cast: new List<string>

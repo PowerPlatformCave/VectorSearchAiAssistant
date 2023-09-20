@@ -30,7 +30,7 @@ namespace Vectorize.Services
                 _client = new MongoClient(connection);
                 _database = _client.GetDatabase(databaseName);
 
-                //product, customer, vectors, completions
+                //movie, vectors, completions
                 List<string> collections = collectionNames.Split(',').ToList();
 
 
@@ -104,13 +104,14 @@ namespace Vectorize.Services
                 throw new ArgumentException("UpsertVectorAsync: El documento no contiene _id.");
             }
 
-            string? _idValue = document["_id"].ToString();
+            //string? _idValue = document["_id"].ToString();
 
 
             try
             {
-                var filter = Builders<BsonDocument>.Filter.Eq("_id", _idValue);
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", document["_id"]);
                 var options = new ReplaceOptions { IsUpsert = true };
+                 
                 await _collections["vectors"].ReplaceOneAsync(filter, document, options);
 
             }
@@ -137,7 +138,7 @@ namespace Vectorize.Services
                 var bsonItem = movie.ToBsonDocument();
 
                 await _collections["movie"].ReplaceOneAsync(
-                    filter: Builders<BsonDocument>.Filter.Eq("_id", movie.Id),
+                    filter: Builders<BsonDocument>.Filter.Eq("_id", movie.id),
                     options: new ReplaceOptions { IsUpsert = true },
                     replacement: bsonItem);
 
@@ -168,7 +169,7 @@ namespace Vectorize.Services
             {
 
                 var filter = Builders<BsonDocument>.Filter.And(                 
-                     Builders<BsonDocument>.Filter.Eq("_id", movie.Id));
+                     Builders<BsonDocument>.Filter.Eq("_id", movie.id));
 
                 //Eliminar de la colección de productos
                 await _collections["movie"].DeleteOneAsync(filter);
@@ -198,7 +199,7 @@ namespace Vectorize.Services
                 int movieCount = 1;
 
 
-                using (var cursor = await _collections["movies"].Find(filter).ToCursorAsync())
+                using (var cursor = await _collections["movie"].Find(filter).ToCursorAsync())
                 {
                     while (await cursor.MoveNextAsync())
                     {
@@ -211,9 +212,10 @@ namespace Vectorize.Services
                             Movie movie = BsonSerializer.Deserialize<Movie>(document);
 
                             //Generar el vector
-                            movie.vector = await _openAiService.GetEmbeddingsAsync(document.ToString());
+                            movie.vector = await _openAiService.GetEmbeddingsAsync(movie.ToString());
 
                             //Guardar el vector en la colección de vectores
+                            //await UpsertVectorAsync(movie.ToBsonDocument());
                             await UpsertVectorAsync(movie.ToBsonDocument());
 
                             movieCount++;
