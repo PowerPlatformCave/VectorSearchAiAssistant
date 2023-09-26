@@ -125,7 +125,7 @@ namespace Vectorize.Services
         }
 
 
-        public async Task<Movie> UpsertProductAsync(Movie movie)
+        public async Task<Movie> UpsertMovieAsync(Movie movie)
         {
 
             //Añadir primero a la colección de películas, luego vectorizar y almacenar en la colección de vectores.
@@ -154,7 +154,7 @@ namespace Vectorize.Services
             }
             catch (MongoException ex)
             {
-                _logger.LogError($"Exception: UpsertProductAsync(): {ex.Message}");
+                _logger.LogError($"Exception: UpsertMovieAsync(): {ex.Message}");
                 throw;
 
             }
@@ -171,7 +171,7 @@ namespace Vectorize.Services
                 var filter = Builders<BsonDocument>.Filter.And(                 
                      Builders<BsonDocument>.Filter.Eq("_id", movie.id));
 
-                //Eliminar de la colección de productos
+                //Eliminar de la colección de películas
                 await _collections["movie"].DeleteOneAsync(filter);
 
                 //Borrar de la colección de vectores
@@ -180,7 +180,7 @@ namespace Vectorize.Services
             }
             catch (MongoException ex)
             {
-                _logger.LogError($"Exception: DeleteProductAsync(): {ex.Message}");
+                _logger.LogError($"Exception: DeleteMovieAsync(): {ex.Message}");
                 throw;
 
             }
@@ -231,7 +231,7 @@ namespace Vectorize.Services
             }
             catch (MongoException ex)
             {
-                _logger.LogError($"Exception: InitialProductVectorsAsync(): {ex.Message}");
+                _logger.LogError($"Exception: InitialMovieVectorsAsync(): {ex.Message}");
                 throw;
             }
         }

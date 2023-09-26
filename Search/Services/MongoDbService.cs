@@ -3,9 +3,10 @@
     using MongoDB.Bson;
     using MongoDB.Driver;
     using Search.Models;
+    using System.Globalization;
 
     /// <summary>
-    /// Service to access Azure Cosmos DB for Mongo vCore.
+    /// Servicio para acceder a Azure Cosmos DB para Mongo vCore.
     /// </summary>
     public class MongoDbService
     {
@@ -23,13 +24,13 @@
         private readonly ILogger _logger;
 
         /// <summary>
-        /// Creates a new instance of the service.
+        /// Crea una nueva instancia del servicio.
         /// </summary>
         /// <param name="
         /// ">Endpoint URI.</param>
         /// <param name="key">Account key.</param>
-        /// <param name="databaseName">Name of the database to access.</param>
-        /// <param name="collectionNames">Names of the collections for this retail sample.</param>
+        /// <param name="databaseName">Nombre de la base de datos a la que acceder.</param>
+        /// <param name="collectionNames">Nombres de las colecciones</param>
         /// <exception cref="ArgumentNullException">Thrown when endpoint, key, databaseName, or collectionNames is either null or empty.</exception>
         /// <remarks>
         /// This constructor will validate credentials and create a service client instance.
@@ -65,7 +66,7 @@
 
             try
             {
-                string vectorIndexName = "vectorSearchIndex";
+                string vectorIndexName = "vectorSearchIndexMovie";
 
                 //Find if vector index exists in vectors collection
                 using (IAsyncCursor<BsonDocument> indexCursor = vectorCollection.Indexes.List())
@@ -110,47 +111,17 @@
             List<string> retDocs = new List<string>();
 
             string resultDocuments = string.Empty;
+            var values = string.Join(',', embeddings.Select(e => e.ToString(CultureInfo.InvariantCulture)));
 
             try
             {
                 //Search Mongo vCore collection for similar embeddings
                 //Project the fields that are needed
-                //BsonDocument[] pipeline = new BsonDocument[]
-                //{
-                //    BsonDocument.Parse($"{{$search: {{cosmosSearch: {{ vector: [{string.Join(',', embeddings)}], path: 'vector', k: {_maxVectorSearchResults}}}, returnStoredSource:true}}}}"),
-                //    BsonDocument.Parse($"{{$project: {{_id: 0, vector: 0}}}}"),
-                //};
-
-                var searchStage = new BsonDocument
+                BsonDocument[] pipeline = new BsonDocument[]
                 {
-                    {
-                        "$search", new BsonDocument
-                        {
-                            { "cosmosSearch", new BsonDocument
-                                {
-                                    { "vector", new BsonArray(embeddings) }, // Utiliza BsonArray para el arreglo
-                                    { "path", "vector" },
-                                    { "k", _maxVectorSearchResults }
-                                }
-                            },
-                            { "returnStoredSource", true }
-                        }
-                    }
+                    BsonDocument.Parse($"{{$search: {{cosmosSearch: {{ vector: [{values}], path: 'vector', k: {_maxVectorSearchResults}}}, returnStoredSource:true}}}}"),
+                    BsonDocument.Parse($"{{$project: {{_id: 0, vector: 0}}}}"),
                 };
-
-
-                var projectStage = new BsonDocument
-                {
-                    { "$project", new BsonDocument
-                        {
-                            { "_id", 0 },
-                            { "vector", 0 }
-                        }
-                    }
-};
-
-                var pipeline = new BsonDocument[] { searchStage, projectStage };
-
 
                 // Return results, combine into a single string
                 List<BsonDocument> bsonDocuments = await _vectors.Aggregate<BsonDocument>(pipeline).ToListAsync();
@@ -165,6 +136,7 @@
             }
 
             return resultDocuments;
+
         }
 
         /// <summary>

@@ -70,7 +70,7 @@ namespace Vectorize
 
                 Movie movie = GetMovieTest;
 
-                await _mongo.UpsertProductAsync(movie);
+                await _mongo.UpsertMovieAsync(movie);
 
                 _logger.LogInformation("Vector generado para Movie Recomendation Engine y guardado en el catálogo de películas");
 

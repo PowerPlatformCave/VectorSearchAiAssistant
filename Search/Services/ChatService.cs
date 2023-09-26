@@ -131,7 +131,7 @@ public class ChatService
             (float[] promptVectors, int vectorTokens) = await _openAiService.GetEmbeddingsAsync(sessionId, conversationAndUserPrompt);
 
 
-            //Do vector search on prompt embeddings, return list of documents
+            //Do vector search on prompt embeddings, return list of documents 
             string retrievedDocuments = await _mongoDbService.VectorSearchAsync(promptVectors);
 
 
