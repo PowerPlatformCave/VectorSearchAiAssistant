@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 namespace Search.Services;
 
 /// <summary>
-/// Service to access Azure OpenAI.
+/// Servicio para acceder a Azure OpenAI.
 /// </summary>
 public class OpenAiService
 {
@@ -19,37 +19,37 @@ public class OpenAiService
 
 
 
-    //System prompts to send with user prompts to instruct the model for chat session
+    //Mensajes del sistema para enviar con mensajes de usuario para instruir al modelo para la sesión de chat
     private readonly string _systemPrompt = @"
-        You are an AI assistant that helps people find information.
-        Provide concise answers that are polite and professional." + Environment.NewLine;
+        Eres un asistente de inteligencia artificial que recomienda películas a la gente.
+        Proporciona respuestas concisas que sean educadas y profesionales" + Environment.NewLine;
 
     private readonly string _systemPromptRetailAssistant = @"
-        You are an intelligent assistant for the Cosmic Works Bike Company. 
-        You are designed to provide helpful answers to user questions about 
-        product, product category, customer and sales order information provided in JSON format below.
+        Eres un asistente inteligente para la plataforma Power Cave AI Assistant. 
+        Estás diseñado para proporcionar respuestas útiles a las preguntas de los usuarios sobre 
+        recomendaciones de películas proporcionadas en formato JSON a continuación.
 
-        Instructions:
-        - Only answer questions related to the information provided below,
-        - Don't reference any product, customer, or salesOrder data not provided below.
-        - If you're unsure of an answer, you can say ""I don't know"" or ""I'm not sure"" and recommend users search themselves.
+        Instrucciones:
+        - Responde únicamente a las preguntas relacionadas con la información que se facilita a continuación,
+        - No hagas referencia a datos de películas que no se proporcionen a continuación.
+        - Si no está seguro de una respuesta, puedes decir ""No lo sé"" o ""No estoy seguro"" y recomendar a los usuarios que busquen por sí mismos.
 
-        Text of relevant information:";
+        Texto de información relevante:";
 
-    //System prompt to send with user prompts to instruct the model for summarization
+    //Mensaje del sistema para enviar  mensajes de usuario para instruir al modelo de resumen
     private readonly string _summarizePrompt = @"
-        Summarize this prompt in one or two words to use as a label in a button on a web page. Output words only." + Environment.NewLine;
+        Resume esta pregunta en una o dos palabras para utilizarla como etiqueta en un botón de una página web. Sólo palabras de salida." + Environment.NewLine;
 
 
     /// <summary>
-    /// Gets the maximum number of tokens from the conversation to send as part of the user prompt.
+    /// Obtiene el número máximo de tokens de la conversación a enviar como parte de la petición al usuario.
     /// </summary>
     public int MaxConversationTokens
     {
         get => 100;// MaxConversationPromptTokens;
     }
     /// <summary>
-    /// Gets the maximum number of tokens that can be used in generating the completion.
+    /// Obtiene el número máximo de tokens que se pueden utilizar en la generación de la finalización.
     /// </summary>
     public int MaxCompletionTokens
     {
@@ -57,17 +57,17 @@ public class OpenAiService
     }
 
     /// <summary>
-    /// Creates a new instance of the service.
+    /// Crea una nueva instancia del servicio.
     /// </summary>
     /// <param name="endpoint">Endpoint URI.</param>
     /// <param name="key">Account key.</param>
-    /// <param name="embeddingsDeployment">Name of the model deployment for generating embeddings.</param>
-    /// <param name="completionsDeployment">Name of the model deployment for generating completions.</param>
-    /// <param name="maxConversationBytes">Maximum number of bytes to limit conversation history sent for a completion.</param>
+    /// <param name="embeddingsDeployment">Nombre del despliegue del modelo para generar incrustaciones.</param>
+    /// <param name="completionsDeployment">Nombre del despliegue del modelo para generar terminaciones.</param>
+    /// <param name="maxConversationBytes">Número máximo de bytes para limitar el historial de conversación enviado para una finalización.</param>
     /// <param name="logger">Logger instance.</param>
-    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, deploymentName, or maxConversationBytes is either null or empty.</exception>
+    /// <exception cref="ArgumentNullException">Se lanza cuando endpoint, key, deploymentName o maxConversationBytes son nulos o están vacíos.</exception>
     /// <remarks>
-    /// This constructor will validate credentials and create a HTTP client instance.
+    /// Este constructor validará las credenciales y creará una instancia de cliente HTTP.
     /// </remarks>
     public OpenAiService(string endpoint, string key, string embeddingsDeployment, string completionsDeployment, string maxCompletionTokens, string maxConversationTokens, ILogger logger)
     {
@@ -95,7 +95,7 @@ public class OpenAiService
             }
         };
 
-        //Use this as endpoint in configuration to use non-Azure Open AI endpoint and OpenAI model names
+        //Utilizar como punto final en la configuración para utilizar nombres de endpoint y modelos de OpenAI que no sean de Azure Open AI.
         if (endpoint.Contains("api.openai.com"))
             _client = new OpenAIClient(key, options);
         else
@@ -105,11 +105,11 @@ public class OpenAiService
     }
 
     /// <summary>
-    /// Sends a prompt to the deployed OpenAI embeddings model and returns an array of vectors as a response.
+    /// Envía una consulta al modelo de incrustación de OpenAI desplegado y devuelve una matriz de vectores como respuesta.
     /// </summary>
-    /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-    /// <param name="prompt">Prompt message to generated embeddings on.</param>
-    /// <returns>Response from the OpenAI model as an array of vectors along with tokens for the prompt and response.</returns>
+    /// <param name="sessionId">Identificador de la sesión de chat para la conversación actual.</param>
+    /// <param name="prompt">Mensaje de aviso para incrustaciones generadas </param>
+    /// <returns> Respuesta del modelo OpenAI como un array de vectores junto con tokens para el prompt y la respuesta.</returns>
     public async Task<(float[] response, int responseTokens)> GetEmbeddingsAsync(string sessionId, string input)
     {
 
@@ -147,11 +147,11 @@ public class OpenAiService
     }
 
     /// <summary>
-    /// Sends a prompt to the deployed OpenAI LLM model and returns the response.
+    /// Envía una consulta al modelo OpenAI LLM desplegado y devuelve la respuesta.
     /// </summary>
-    /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-    /// <param name="prompt">Prompt message to send to the deployment.</param>
-    /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
+    /// <param name="sessionId">Identificador de la sesión de chat para la conversación actual.</param>
+    /// <param name="prompt">Mensaje de aviso para enviar al despliegue.</param>
+    /// <returns>Respuesta del modelo OpenAI junto con tokens para el prompt y la respuesta.</returns>
     public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt, string documents)
     {
 
@@ -201,16 +201,17 @@ public class OpenAiService
     }
 
     /// <summary>
-    /// Sends the existing conversation to the OpenAI model and returns a two word summary.
+    /// Envía la conversación existente al modelo OpenAI y devuelve un resumen de dos palabras.
     /// </summary>
-    /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-    /// <param name="userPrompt">The first User Prompt and Completion to send to the deployment.</param>
-    /// <returns>Summarization response from the OpenAI model deployment.</returns>
+    /// <param name="sessionId">Identificador de la sesión de chat para la conversación actual.</param>
+    /// <param name="userPrompt">La primera solicitud de usuario y la finalización para enviar a la implementación.</param>
+    /// <returns>Respuesta de resumen del despliegue del modelo OpenAI.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
     {
 
         ChatMessage systemMessage = new ChatMessage(ChatRole.System, _summarizePrompt);
         ChatMessage userMessage = new ChatMessage(ChatRole.User, userPrompt);
+
 
         ChatCompletionsOptions options = new()
         {
@@ -231,7 +232,7 @@ public class OpenAiService
         ChatCompletions completions = completionsResponse.Value;
         string output = completions.Choices[0].Message.Content;
 
-        //Remove all non-alpha numeric characters (Turbo has a habit of putting things in quotes even when you tell it not to)
+        //Eliminar todos los caracteres numéricos no alfa (Turbo tiene la costumbre de poner las cosas entre comillas, incluso cuando le dices que no lo haga).
         string summary = Regex.Replace(output, @"[^a-zA-Z0-9\s]", "");
 
         return summary;

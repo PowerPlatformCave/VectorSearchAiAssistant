@@ -3,17 +3,17 @@
     using MongoDB.Bson;
     using MongoDB.Driver;
     using Search.Models;
+    using System.Globalization;
 
     /// <summary>
-    /// Service to access Azure Cosmos DB for Mongo vCore.
+    /// Servicio para acceder a Azure Cosmos DB para Mongo vCore.
     /// </summary>
     public class MongoDbService
     {
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
 
-        private readonly IMongoCollection<Product> _products;
-        private readonly IMongoCollection<Customer> _customers;
+        private readonly IMongoCollection<Movie> _movie;        
         private readonly IMongoCollection<BsonDocument> _vectors;
         private readonly IMongoCollection<Session> _sessions;
         private readonly IMongoCollection<Message> _messages;
@@ -24,13 +24,13 @@
         private readonly ILogger _logger;
 
         /// <summary>
-        /// Creates a new instance of the service.
+        /// Crea una nueva instancia del servicio.
         /// </summary>
         /// <param name="
         /// ">Endpoint URI.</param>
         /// <param name="key">Account key.</param>
-        /// <param name="databaseName">Name of the database to access.</param>
-        /// <param name="collectionNames">Names of the collections for this retail sample.</param>
+        /// <param name="databaseName">Nombre de la base de datos a la que acceder.</param>
+        /// <param name="collectionNames">Nombres de las colecciones</param>
         /// <exception cref="ArgumentNullException">Thrown when endpoint, key, databaseName, or collectionNames is either null or empty.</exception>
         /// <remarks>
         /// This constructor will validate credentials and create a service client instance.
@@ -50,11 +50,10 @@
             _database = _client.GetDatabase(databaseName);
             _maxVectorSearchResults = int.TryParse(maxVectorSearchResults, out _maxVectorSearchResults) ? _maxVectorSearchResults : 10;
 
-            //product, customer, vectors, completions  //Not used
+            //movie, vectors, completions  //Not used
             List<string> collections = collectionNames.Split(',').ToList();
 
-            _products = _database.GetCollection<Product>("product");
-            _customers = _database.GetCollection<Customer>("customer");
+            _movie = _database.GetCollection<Movie>("movie");            
             _vectors = _database.GetCollection<BsonDocument>("vectors");
             _sessions = _database.GetCollection<Session>("completions");
             _messages = _database.GetCollection<Message>("completions");
@@ -67,7 +66,7 @@
 
             try
             {
-                string vectorIndexName = "vectorSearchIndex";
+                string vectorIndexName = "vectorSearchIndexMovie";
 
                 //Find if vector index exists in vectors collection
                 using (IAsyncCursor<BsonDocument> indexCursor = vectorCollection.Indexes.List())
@@ -101,12 +100,18 @@
             }
 
         }
-
+  
+        /// <summary>
+        /// Gets a list of all current movies.
+        /// </summary>
+        /// <param name="embeddings"></param>
+        /// <returns></returns>
         public async Task<string> VectorSearchAsync(float[] embeddings)
         {
             List<string> retDocs = new List<string>();
 
             string resultDocuments = string.Empty;
+            var values = string.Join(',', embeddings.Select(e => e.ToString(CultureInfo.InvariantCulture)));
 
             try
             {
@@ -114,7 +119,7 @@
                 //Project the fields that are needed
                 BsonDocument[] pipeline = new BsonDocument[]
                 {
-                    BsonDocument.Parse($"{{$search: {{cosmosSearch: {{ vector: [{string.Join(',', embeddings)}], path: 'vector', k: {_maxVectorSearchResults}}}, returnStoredSource:true}}}}"),
+                    BsonDocument.Parse($"{{$search: {{cosmosSearch: {{ vector: [{values}], path: 'vector', k: {_maxVectorSearchResults}}}, returnStoredSource:true}}}}"),
                     BsonDocument.Parse($"{{$project: {{_id: 0, vector: 0}}}}"),
                 };
 
@@ -131,6 +136,7 @@
             }
 
             return resultDocuments;
+
         }
 
         /// <summary>

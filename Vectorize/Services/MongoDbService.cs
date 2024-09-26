@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using Vectorize.Models;
 using Newtonsoft.Json.Linq;
 
+
 namespace Vectorize.Services
 {
     public class MongoDbService
@@ -21,7 +22,7 @@ namespace Vectorize.Services
 
             _logger = logger;
             _openAiService = openAiService;
-            
+
             _collections = new Dictionary<string, IMongoCollection<BsonDocument>>();
 
             try
@@ -29,7 +30,7 @@ namespace Vectorize.Services
                 _client = new MongoClient(connection);
                 _database = _client.GetDatabase(databaseName);
 
-                //product, customer, vectors, completions
+                //movie, vectors, completions
                 List<string> collections = collectionNames.Split(',').ToList();
 
 
@@ -59,7 +60,7 @@ namespace Vectorize.Services
             {
                 string vectorIndexName = "vectorSearchIndex";
 
-                //Find if vector index exists in vectors collection
+                //Comprobar si el índice del vector existe en la colección de vectores
                 using (IAsyncCursor<BsonDocument> indexCursor = vectorCollection.Indexes.List())
                 {
                     bool vectorIndexExists = indexCursor.ToList().Any(x => x["name"] == vectorIndexName);
@@ -78,7 +79,7 @@ namespace Vectorize.Services
                         BsonDocument result = _database.RunCommand(command);
                         if (result["ok"] != 1)
                         {
-                            _logger.LogError("CreateIndex failed with response: " + result.ToJson());
+                            _logger.LogError("CreateIndex falló con respuesta: " + result.ToJson());
                         }
                     }
                 }
@@ -91,31 +92,32 @@ namespace Vectorize.Services
 
         }
 
-        
+
         public async Task UpsertVectorAsync(BsonDocument document)
         {
 
-            //Since we store all the vectors in the same collection just need one function to handle everything
+            //Dado que almacenamos todos los vectores en la misma colección sólo necesitamos una función para gestionar todo
 
             if (!document.Contains("_id"))
             {
-                _logger.LogError("UpsertVectorAsync: Document does not contain _id.");
-                throw new ArgumentException("UpsertVectorAsync: Document does not contain _id.");
+                _logger.LogError("UpsertVectorAsync: El documento no contiene _id.");
+                throw new ArgumentException("UpsertVectorAsync: El documento no contiene _id.");
             }
 
-            string? _idValue = document["_id"].ToString();
+            //string? _idValue = document["_id"].ToString();
 
-            
+
             try
             {
-                var filter = Builders<BsonDocument>.Filter.Eq("_id", _idValue);
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", document["_id"]);
                 var options = new ReplaceOptions { IsUpsert = true };
+                 
                 await _collections["vectors"].ReplaceOneAsync(filter, document, options);
 
             }
             catch (Exception ex)
             {
-                
+
                 _logger.LogError($"Exception: UpsertVectorAsync(): {ex.Message}");
                 throw;
             }
@@ -123,250 +125,81 @@ namespace Vectorize.Services
         }
 
 
-        public async Task<Product> UpsertProductAsync(Product product)
+        public async Task<Movie> UpsertMovieAsync(Movie movie)
         {
 
-            //Add to product collection first, then vectorize and store in vectors collection.
-            //You could store the vectors in product collection but it is simpler to store
-            //in a single collection and search there.
+            //Añadir primero a la colección de películas, luego vectorizar y almacenar en la colección de vectores.
+            //Podría almacenar los vectores en la colección de películas, pero es más sencillo almacenar en una única colección y buscar allí.
+            
 
             try
             {
 
-                var bsonItem = product.ToBsonDocument();
+                var bsonItem = movie.ToBsonDocument();
 
-                await _collections["product"].ReplaceOneAsync(
-                    filter: Builders<BsonDocument>.Filter.Eq("categoryId", product.categoryId)
-                          & Builders<BsonDocument>.Filter.Eq("_id", product.id),
+                await _collections["movie"].ReplaceOneAsync(
+                    filter: Builders<BsonDocument>.Filter.Eq("_id", movie.id),
                     options: new ReplaceOptions { IsUpsert = true },
                     replacement: bsonItem);
 
 
-                //TO DO: Make this simpler
+                //TO DO: Hacerlo mas sencillo   
 
-                //Store in vectors collection
-                //Serialize the product object to send to OpenAI
-                string sProduct = JObject.FromObject(product).ToString();
-                product.vector = await _openAiService.GetEmbeddingsAsync(sProduct);
-                await UpsertVectorAsync(product.ToBsonDocument());
+                //Almacenar en la colección de vectores
+                //Serializar el objeto pelicula para enviarlo a OpenAI
+                string sMovie = JObject.FromObject(movie).ToString();
+                movie.vector = await _openAiService.GetEmbeddingsAsync(sMovie);
+                await UpsertVectorAsync(movie.ToBsonDocument());
 
             }
             catch (MongoException ex)
             {
-                _logger.LogError($"Exception: UpsertProductAsync(): {ex.Message}");
+                _logger.LogError($"Exception: UpsertMovieAsync(): {ex.Message}");
                 throw;
 
             }
 
-            return product;
+            return movie;
         }
 
-        public async Task DeleteProductAsync(Product product)
+        public async Task DeleteMovieAsync(Movie movie)
         {
 
             try
             {
-                
-                var filter = Builders<BsonDocument>.Filter.And(
-                     Builders<BsonDocument>.Filter.Eq("categoryId", product.categoryId),
-                     Builders<BsonDocument>.Filter.Eq("_id", product.id));
 
-                //Delete from the product collection
-                await _collections["customer"].DeleteOneAsync(filter);
+                var filter = Builders<BsonDocument>.Filter.And(                 
+                     Builders<BsonDocument>.Filter.Eq("_id", movie.id));
 
-                //Delete from vectors collection
+                //Eliminar de la colección de películas
+                await _collections["movie"].DeleteOneAsync(filter);
+
+                //Borrar de la colección de vectores
                 await _collections["vectors"].DeleteOneAsync(filter);
 
             }
             catch (MongoException ex)
             {
-                _logger.LogError($"Exception: DeleteProductAsync(): {ex.Message}");
+                _logger.LogError($"Exception: DeleteMovieAsync(): {ex.Message}");
                 throw;
 
             }
 
         }
 
-        public async Task<Customer> UpsertCustomerAsync(Customer customer)
-        {
-
-            //Add to customer collection first, then vectorize and store in vectors collection.
-            //You could store the vectors in customer collection but it is simpler to store
-            //in a single collection and search there.
-
-            try
-            {
-                var bsonItem = customer.ToBsonDocument();
-
-                await _collections["customer"].ReplaceOneAsync(
-                    filter: Builders<BsonDocument>.Filter.Eq("customerId", customer.customerId)
-                          & Builders<BsonDocument>.Filter.Eq("_id", customer.id),
-                    options: new ReplaceOptions { IsUpsert = true },
-                    replacement: bsonItem);
-
-                //TO DO: Make this simpler
-
-                //Store in vectors collection
-                //Serialize the customer object to send to OpenAI
-                string sCustomer = JObject.FromObject(customer).ToString();
-                customer.vector = await _openAiService.GetEmbeddingsAsync(sCustomer);
-                await UpsertVectorAsync(customer.ToBsonDocument());
-
-
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogError($"Exception: UpsertCustomerAsync(): {ex.Message}");
-                throw;
-
-            }
-
-            return customer;
-
-        }
-
-        public async Task DeleteCustomerAsync(Customer customer)
-        {
-
-            try
-            {
-                var filter = Builders<BsonDocument>.Filter.Eq("customerId", customer.customerId)
-                            & Builders<BsonDocument>.Filter.Eq("_id", customer.id);
-
-                await _collections["customer"].DeleteOneAsync(filter);
-
-                //Note: This sample does not add/remove a customer object so vector deletion not implemented
-
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogError($"Exception: DeleteCustomerAsync(): {ex.Message}");
-                throw;
-
-            }
-
-        }
-
-        public async Task<SalesOrder> UpsertSalesOrderAsync(SalesOrder salesOrder)
-        {
-
-            //Add to customer collection first, then vectorize and store in vectors collection.
-            //You could store the vectors in customer collection but it is simpler to store
-            //in a single collection and search there.
-
-            try
-            {
-                var bsonItem = salesOrder.ToBsonDocument();
-
-                await _collections["customer"].ReplaceOneAsync(
-                    filter: Builders<BsonDocument>.Filter.Eq("customerId", salesOrder.customerId)
-                          & Builders<BsonDocument>.Filter.Eq("_id", salesOrder.id),
-                    options: new ReplaceOptions { IsUpsert = true },
-                    replacement: bsonItem);
-
-                //TO DO: Make this simpler
-
-                //Store in vectors collection
-                //Serialize the customer object to send to OpenAI
-                string sOrder = JObject.FromObject(salesOrder).ToString();
-                salesOrder.vector = await _openAiService.GetEmbeddingsAsync(sOrder);
-                await UpsertVectorAsync(salesOrder.ToBsonDocument());
-
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogError($"Exception: UpsertSalesOrderAsync(): {ex.Message}");
-                throw;
-
-            }
-
-            return salesOrder;
-
-        }
-
-        public async Task DeleteSalesOrderAsync(SalesOrder salesOrder)
-        {
-
-            try
-            {
-                var filter = Builders<BsonDocument>.Filter.Eq("customerId", salesOrder.customerId)
-                            & Builders<BsonDocument>.Filter.Eq("_id", salesOrder.id);
-
-                await _collections["customer"].DeleteOneAsync(filter);
-
-                //Note: This sample does not add/remove a customer object so vector deletion not implemented
-
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogError($"Exception: DeleteSalesOrderAsync(): {ex.Message}");
-                throw;
-
-            }
-
-        }
-
-        public async Task<int> InitialProductVectorsAsync()
+        public async Task<int> InitialMoviesVectorsAsync()
         {
             try
             {
 
-                _logger.LogInformation("Generating vectors for Products");
+                _logger.LogInformation("Generación de vectores para películas");
 
-                
+
                 var filter = new BsonDocument();
-                int productCount = 1;
+                int movieCount = 1;
 
 
-                using (var cursor = await _collections["product"].Find(filter).ToCursorAsync())
-                {
-                    while (await cursor.MoveNextAsync())
-                    {
-                        var batch = cursor.Current;
-
-                        foreach(var document in batch)
-                        { 
-
-                            //Deserialize to Product to accept the vector data
-                            Product product = BsonSerializer.Deserialize<Product>(document);
-
-                            //Generate vectors
-                            product.vector = await _openAiService.GetEmbeddingsAsync(document.ToString());
-
-                            //Save to vector collection
-                            await UpsertVectorAsync(product.ToBsonDocument());
-
-                            productCount++;
-                            if (productCount %100 == 0)
-                                _logger.LogInformation($"Generated {productCount} product vectors");
-                        }
-                    }
-                }
-
-                _logger.LogInformation($"Product vector generation complete. {productCount} vectors generated");
-
-                return productCount;
-            }
-            catch(MongoException ex)
-            {
-                _logger.LogError($"Exception: InitialProductVectorsAsync(): {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task<(int customerVectors, int orderVectors)> InitialCustomerAndSalesOrderVectorsAsync()
-        {
-            try
-            {
-                _logger.LogInformation("Generating vectors for Customers and Sales Orders");
-
-                
-                var filter = new BsonDocument();
-                int orderCount = 1;
-                int customerCount = 1;
-
-
-                using (var cursor = await _collections["customer"].Find(filter).ToCursorAsync())
+                using (var cursor = await _collections["movie"].Find(filter).ToCursorAsync())
                 {
                     while (await cursor.MoveNextAsync())
                     {
@@ -375,53 +208,30 @@ namespace Vectorize.Services
                         foreach (var document in batch)
                         {
 
-                            if (document["type"] == "salesOrder")
-                            {
-                                //Deserialize to accept the vector data
-                                SalesOrder salesOrder = BsonSerializer.Deserialize<SalesOrder>(document);
+                            //Deserializar la película para obtener el vector
+                            Movie movie = BsonSerializer.Deserialize<Movie>(document);
 
-                                //Generate vectors
-                                salesOrder.vector = await _openAiService.GetEmbeddingsAsync(document.ToString());
+                            //Generar el vector
+                            movie.vector = await _openAiService.GetEmbeddingsAsync(movie.ToString());
 
-                                //Save to vector collection
-                                await UpsertVectorAsync(salesOrder.ToBsonDocument());
+                            //Guardar el vector en la colección de vectores
+                            //await UpsertVectorAsync(movie.ToBsonDocument());
+                            await UpsertVectorAsync(movie.ToBsonDocument());
 
-                                orderCount++;
-                                if (orderCount % 100 == 0)
-                                    _logger.LogInformation($"Generated {orderCount} sales order vectors");
-
-                            }
-                            else if (document["type"] == "customer")
-                            {
-                                //Deserialize to accept the vector data
-                                Customer customer = BsonSerializer.Deserialize<Customer>(document);
-
-                                //Generate vectors
-                                customer.vector = await _openAiService.GetEmbeddingsAsync(document.ToString());
-
-                                //Save to vector collection
-                                await UpsertVectorAsync(customer.ToBsonDocument());
-
-                                customerCount++;
-                                if (customerCount % 100 == 0)
-                                    _logger.LogInformation($"Generated {customerCount} customer vectors");
-                            }
-                            else
-                            {
-                                _logger.LogError($"Exception: InitialCustomerAndSalesOrderVectorsAsync(): Unrecognized type in customer container");
-
-                            }
+                            movieCount++;
+                            if (movieCount % 100 == 0)
+                                _logger.LogInformation($"Generados {movieCount} vectores de películas");
                         }
                     }
                 }
 
-                _logger.LogInformation($"Customer and Sales Order vector generation complete");
+                _logger.LogInformation($"Finalizada la generación de vectores de películas. {movieCount} vectores generados");
 
-                return (customerVectors: customerCount, orderVectors: orderCount);
+                return movieCount;
             }
             catch (MongoException ex)
             {
-                _logger.LogError($"Exception: InitialCustomerAndSalesOrderVectorsAsync(): {ex.Message}");
+                _logger.LogError($"Exception: InitialMovieVectorsAsync(): {ex.Message}");
                 throw;
             }
         }
@@ -442,6 +252,7 @@ namespace Vectorize.Services
                 throw;
             }
         }
+
 
     }
 }

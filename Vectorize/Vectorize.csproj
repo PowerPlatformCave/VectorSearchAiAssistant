@@ -39,4 +39,7 @@
 			<Alias>ExecutionContext</Alias>
 		</Using>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Models\" />
+	</ItemGroup>
 </Project>

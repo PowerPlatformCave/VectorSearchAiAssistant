@@ -297,7 +297,7 @@
         "OPENAI__MAXCOMPLETIONTOKENS": "[variables('openAiSettings').maxCompletionTokens]",
         "MONGODB__CONNECTION": "[format('mongodb+srv://{0}:{1}@{2}.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000', variables('mongovCoreSettings').mongoClusterLogin, variables('mongovCoreSettings').mongoClusterPassword, variables('mongovCoreSettings').mongoClusterName)]",
         "MONGODB__DATABASENAME": "retaildb",
-        "MONGODB__COLLECTIONNAMES": "product,customer,vectors,completions",
+        "MONGODB__COLLECTIONNAMES": "movie,vectors,completions",
         "MONGODB__MAXVECTORSEARCHRESULTS": "10"
       },
       "dependsOn": [
@@ -324,7 +324,7 @@
         "OPENAI__MAXTOKENS": "8191",
         "MONGODB__CONNECTION": "[format('mongodb+srv://{0}:{1}@{2}.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000', variables('mongovCoreSettings').mongoClusterLogin, variables('mongovCoreSettings').mongoClusterPassword, variables('mongovCoreSettings').mongoClusterName)]",
         "MONGODB__DATABASENAME": "retaildb",
-        "MONGODB__COLLECTIONNAMES": "product,customer,vectors,completions"
+        "MONGODB__COLLECTIONNAMES": "movie,vectors,completions"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('appServiceSettings').function.name)]",
